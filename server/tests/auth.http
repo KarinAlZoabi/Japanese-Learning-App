@@ -1,0 +1,34 @@
+### Health Check
+
+GET http://localhost:5000/
+
+###
+
+### Register
+
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+    "username": "karin",
+    "email": "karin@test.com",
+    "password": "password123"
+}
+
+###
+
+### Login
+
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "karin@test.com",
+    "password": "password123"
+}
+
+###
+
+### Logout
+
+POST http://localhost:5000/api/auth/logout
