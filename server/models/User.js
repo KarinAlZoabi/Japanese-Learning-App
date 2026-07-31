@@ -71,8 +71,7 @@ userSchema.pre(
 async function()
 {
 
-    if(!this.isModified("password"))
-        return next();
+   if (!this.isModified("password")) return;
 
 
     const salt =
