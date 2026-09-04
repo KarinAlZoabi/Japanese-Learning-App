@@ -1,148 +1,144 @@
 import { motion, useReducedMotion } from "framer-motion";
+import { useMemo } from "react";
 import petalImage from "../../assets/images/sakura-petal.png";
 
-/*
-  15 petals with staggered negative delays distributed evenly across slow durations (35s - 48s).
-  This ensures an endless, seamless stream with no starting/stopping gaps.
-*/
-const streamPetals = [
-  // TOP CLUSTER — Starting near top-right nav area
-  { id: 1, size: 52, duration: 36, delay: -2, offset: 0, rotate: 280 },
-  { id: 2, size: 38, duration: 42, delay: -8, offset: -2, rotate: -240 },
-  { id: 3, size: 68, duration: 38, delay: -14, offset: 2, rotate: 320 },
-  { id: 4, size: 44, duration: 44, delay: -20, offset: -3, rotate: -280 },
-  { id: 5, size: 58, duration: 35, delay: -26, offset: 3, rotate: 220 },
-  { id: 6, size: 32, duration: 40, delay: -32, offset: -2, rotate: -320 },
-  { id: 7, size: 74, duration: 46, delay: -38, offset: 2, rotate: 360 },
+// PRNG for deterministic, non-clashing renders per session
+function mulberry32(seed) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
-  // MIDDLE CLUSTER — Smooth mid-stream drift
-  { id: 8, size: 46, duration: 39, delay: -5, offset: 1, rotate: -260 },
-  { id: 9, size: 60, duration: 43, delay: -11, offset: -2, rotate: 300 },
-  { id: 10, size: 36, duration: 37, delay: -17, offset: 3, rotate: -220 },
-  { id: 11, size: 54, duration: 41, delay: -23, offset: -3, rotate: 340 },
-  { id: 12, size: 42, duration: 47, delay: -29, offset: 2, rotate: -300 },
+function makePetal(id, rng) {
+  // Tree canopy spawn origin (Top-Right)
+  const startX = 78 + rng() * 20; // 78% to 98%
+  const startY = 2 + rng() * 33;   // 2% to 35%
 
-  // LOWER CLUSTER — Gentle lower exit stream
-  { id: 13, size: 50, duration: 45, delay: -10, offset: -2, rotate: 250 },
-  { id: 14, size: 34, duration: 38, delay: -22, offset: 3, rotate: -340 },
-  { id: 15, size: 44, duration: 48, delay: -34, offset: -2, rotate: 290 },
-];
+  // Wind midpoint trajectory across center sky
+  const midX = 35 + rng() * 30;   // 35% to 65%
+  const midY = 30 + rng() * 25;   // 30% to 55%
 
-/*
-  Flight keyframes matching the red path in edited-image_3.jpg:
-*/
-const path = {
-  left: [
-    "72%", // 1. High top-right near navbar
-    "65%", // 2. Between "About" and "Contact"
-    "52%", // 3. Dips down into sky under "About"
-    "38%", // 4. Flattening out under pink pill badge
-    "28%", // 5. Directly above "Start yours."
-    "21%", // 6. Dives between "Start" and "yours."
-    "16%", // 7. Down through description text
-    "12%", // 8. Approaching CTA button
-    "8%",  // 9. Directly over "Start Learning" button
-    "2%",  // 10. Exiting bottom-left corner
-  ],
+  // Landing / Exit zone (Left / Water area)
+  const endX = -10 + rng() * 30;  // -10% to 20%
+  const endY = 55 + rng() * 35;   // 55% to 90%
 
-  top: [
-    "2%",  // 1. Top navbar boundary
-    "12%", // 2. Passing nav pill
-    "26%", // 3. Low dip under "About"
-    "31%", // 4. Leveling out under badge
-    "32%", // 5. Plateau above heading
-    "42%", // 6. Cutting through main heading
-    "55%", // 7. Cutting through description text
-    "68%", // 8. Heading to button
-    "82%", // 9. Passing over pink button
-    "98%", // 10. Exit bottom-left
-  ],
-};
+  const steps = 6;
+  const left = Array.from({ length: steps }, (_, i) => {
+    const t = i / (steps - 1);
+    // Quadratic bezier curve for natural arc
+    const val = (1 - t) * (1 - t) * startX + 2 * (1 - t) * t * midX + t * t * endX;
+    return `${val.toFixed(1)}%`;
+  });
+
+  const top = Array.from({ length: steps }, (_, i) => {
+    const t = i / (steps - 1);
+    const val = (1 - t) * (1 - t) * startY + 2 * (1 - t) * t * midY + t * t * endY;
+    return `${val.toFixed(1)}%`;
+  });
+
+  const duration = 18 + rng() * 22; // 18s - 40s drift time
+  const size = 16 + rng() * 28;     // Varied petal scaling
+  const depth = rng();
+  const maxOpacity = 0.4 + depth * 0.55;
+  const blur = (1 - depth) * 2.0;   // Distance blur effect
+  const spin = (rng() < 0.5 ? -1 : 1) * (180 + rng() * 300);
+
+  // Micro-sway turbulence offsets
+  const sway = 15 + rng() * 25;
+  const x = Array.from({ length: steps }, (_, i) => 
+    i === 0 || i === steps - 1 ? 0 : Math.round((rng() - 0.5) * sway)
+  );
+  const y = Array.from({ length: steps }, (_, i) => 
+    i === 0 || i === steps - 1 ? 0 : Math.round((rng() - 0.5) * (sway * 0.6))
+  );
+
+  const rotate = Array.from({ length: steps }, (_, i) => (spin * i) / (steps - 1));
+  const opacity = [0, maxOpacity, maxOpacity, maxOpacity * 0.8, maxOpacity * 0.4, 0];
+
+  return {
+    id,
+    left,
+    top,
+    size,
+    duration,
+    delay: -rng() * duration, // Negative delay to prevent initial cold-start
+    blur,
+    x,
+    y,
+    rotate,
+    opacity,
+  };
+}
+
+function buildTreePetals() {
+  const rng = mulberry32(20260804);
+  const petals = [];
+  // 26 petals for dense, ambient drift
+  for (let i = 0; i < 26; i++) {
+    petals.push(makePetal(i, rng));
+  }
+  return petals;
+}
 
 export default function FloatingSakura() {
   const reduceMotion = useReducedMotion();
+  const petals = useMemo(buildTreePetals, []);
 
   return (
     <div
-      className="
-        pointer-events-none
-        absolute
-        inset-0
-        z-10
-        hidden
-        overflow-hidden
-        md:block
-      "
+      className="pointer-events-none absolute inset-0 z-10 hidden overflow-hidden md:block"
       aria-hidden="true"
     >
-      {streamPetals.map((petal) => (
-        <motion.img
-          key={petal.id}
-          src={petalImage}
-          alt=""
-          className="
-            absolute
-            object-contain
-            drop-shadow-[0_5px_8px_rgba(244,114,182,0.18)]
-          "
-          style={{
-            width: petal.size,
-            height: petal.size,
-          }}
-          initial={{
-            left: path.left[0],
-            top: path.top[0],
-            opacity: 0,
-          }}
-          animate={
-            reduceMotion
-              ? {
-                  left: path.left[4],
-                  top: path.top[4],
-                  opacity: 0.6,
-                }
-              : {
-                  /* MAIN WIND PATH */
-                  left: path.left,
-                  top: path.top,
+      {petals.map((petal) => {
+        const mid = Math.floor(petal.left.length / 2);
+        const restOpacity = Math.max(...petal.opacity) * 0.7;
 
-                  /* Gentle micro-fluttering */
-                  x: [
-                    0,
-                    petal.offset * 4,
-                    petal.offset * -5,
-                    petal.offset * 6,
-                    petal.offset * -4,
-                    petal.offset * 5,
-                    0,
-                  ],
-
-                  y: [0, -8, 5, -6, 7, -4, 0],
-
-                  /* Continuous rotation */
-                  rotate: [
-                    0,
-                    petal.rotate * 0.2,
-                    petal.rotate * 0.45,
-                    petal.rotate * 0.7,
-                    petal.rotate,
-                  ],
-
-                  /* Natural fluttering scale */
-                  scale: [0.75, 0.95, 1.08, 0.95, 1.02, 0.82],
-
-                  /* Seamless fade in & fade out */
-                  opacity: [0, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.85, 0.4, 0],
-                }
-          }
-          transition={{
-            duration: petal.duration,
-            delay: petal.delay,
-            repeat: Infinity,
-            ease: "linear", // Ensures continuous, smooth velocity without stopping/restarting
-          }}
-        />
-      ))}
+        return (
+          <motion.img
+            key={petal.id}
+            src={petalImage}
+            alt=""
+            className="absolute object-contain drop-shadow-[0_4px_6px_rgba(244,114,182,0.2)]"
+            style={{
+              width: petal.size,
+              height: petal.size,
+              filter: petal.blur > 0.2 ? `blur(${petal.blur.toFixed(1)}px)` : undefined,
+              willChange: "left, top, transform, opacity",
+            }}
+            initial={{
+              left: petal.left[0],
+              top: petal.top[0],
+              opacity: 0,
+            }}
+            animate={
+              reduceMotion
+                ? {
+                    left: petal.left[mid],
+                    top: petal.top[mid],
+                    opacity: restOpacity,
+                  }
+                : {
+                    left: petal.left,
+                    top: petal.top,
+                    x: petal.x,
+                    y: petal.y,
+                    rotate: petal.rotate,
+                    opacity: petal.opacity,
+                  }
+            }
+            transition={{
+              duration: petal.duration,
+              delay: petal.delay,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+        );
+      })}
     </div>
   );
 }

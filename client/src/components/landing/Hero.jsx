@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 export default function Hero() {
   const container = {
@@ -70,12 +71,12 @@ export default function Hero() {
           variants={item}
           className="mt-10 flex flex-wrap gap-4"
         >
-          <a
-            href="/signup"
-            className="rounded-full bg-gradient-to-r from-pink-500 to-rose-400 px-8 py-4 font-semibold text-white shadow-lg shadow-pink-300/40 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-300/50"
-          >
-            Start Learning
-          </a>
+          <Link
+  to="/signup"
+  className="rounded-full bg-gradient-to-r from-pink-500 to-rose-400 px-8 py-4 font-semibold text-white shadow-lg shadow-pink-300/40 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-300/50"
+>
+  Start Learning
+</Link>
 
           <a
             href="#features"
