@@ -1,51 +1,6 @@
 import { Link } from "react-router-dom";
+import Brand from "../ui/Brand";
 import background from "../../assets/images/v2.png";
-
-function MonogatariLogo({ light = false }) {
-  return (
-    <Link
-      to="/"
-      aria-label="Monogatari home"
-      className="group inline-flex w-fit items-center gap-3"
-    >
-      <span
-        className={`relative flex h-11 w-11 items-center justify-center rounded-2xl border shadow-lg backdrop-blur-md transition duration-300 group-hover:-rotate-6 group-hover:scale-105 ${
-          light
-            ? "border-white/40 bg-white/20 shadow-black/10"
-            : "border-pink-100 bg-white/80 shadow-pink-100"
-        }`}
-      >
-        <span
-          className={`text-xl font-black ${
-            light ? "text-white" : "text-pink-500"
-          }`}
-        >
-          物
-        </span>
-
-        <span className="absolute -right-1 -top-1 text-sm">🌸</span>
-      </span>
-
-      <span>
-        <span
-          className={`block text-lg font-black tracking-tight ${
-            light ? "text-white" : "text-[#31282d]"
-          }`}
-        >
-          Monogatari
-        </span>
-
-        <span
-          className={`block text-[10px] font-bold uppercase tracking-[0.18em] ${
-            light ? "text-white/65" : "text-pink-400"
-          }`}
-        >
-          Your Japanese story
-        </span>
-      </span>
-    </Link>
-  );
-}
 
 export default function AuthLayout({
   children,
@@ -70,7 +25,7 @@ export default function AuthLayout({
           <div className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[#302329]/80 via-[#302329]/30 to-transparent" />
 
           <div className="relative z-10 flex h-full w-full flex-col justify-between p-10 xl:p-14">
-            <MonogatariLogo light />
+            <Brand light />
 
             <div className="max-w-xl pb-2 text-white">
              <p className="mb-4 inline-flex rounded-full border border-white/30 bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-md">
@@ -99,7 +54,7 @@ export default function AuthLayout({
             <div className="w-full max-w-md">
               {/* Mobile header */}
               <div className="mb-5 flex items-center justify-between lg:hidden">
-                <MonogatariLogo />
+                <Brand />
 
                 <Link
                   to="/"

@@ -87,6 +87,7 @@ export default function SignIn() {
 
   navigate(destination, {
     replace: true,
+    state: { justRegistered: false },
   });
 } catch (error) {
   const message =

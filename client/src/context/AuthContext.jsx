@@ -69,11 +69,10 @@ export function AuthProvider({ children }) {
    * Logout.
    */
   const logout = async () => {
-    try {
-      await api.post("/auth/logout");
-    } finally {
-      setUser(null);
-    }
+    // Only clear the client session after the server confirms the cookie
+    // was removed. Otherwise a failed request could leave a valid JWT.
+    await api.post("/auth/logout");
+    setUser(null);
   };
 
   const value = {

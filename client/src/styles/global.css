@@ -13,3 +13,17 @@ body {
   color: #2f2a35;
   overflow-x: hidden;
 }
+/* Shared app focus treatment and more comfortable typography across views. */
+::selection {
+  background: #fbcfe8;
+  color: #4a2036;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

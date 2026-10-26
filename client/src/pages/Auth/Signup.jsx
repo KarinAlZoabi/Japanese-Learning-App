@@ -92,8 +92,11 @@ export default function SignUp() {
       password: form.password,
     });
 
+    // Tell the dashboard this navigation follows a successful first signup.
+    // No database change is required: future logins will not carry this flag.
     navigate("/dashboard", {
       replace: true,
+      state: { justRegistered: true },
     });
   } catch (error) {
     const message =
